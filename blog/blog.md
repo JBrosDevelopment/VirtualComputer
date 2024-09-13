@@ -9,7 +9,7 @@
 **How?** I'm using the programming language **Rust** for this project. What the VC does is take the binary and figure out the instructions that go with it. It uses Binary Decoders in a *match* statement to decide what instruction it is. Every Byte is an instruction. Some examples of instructions are moving from memory to registers, adding the values from one register to another using the ALU. This is why assembly is basically binary. Maybe the binary sequence `01001110` is the `MOV` instruction. All an assembler does is convert the instructions like `CPY`, `LDR`, and `ADD` to there corrosponding bytes. It gets a little more complex, like maybe the first 6 bits is for the instruction, and the last 2 bits is for the register. If this sounds interesting to you, I highly recommend watching [Core Dumpped](https://www.youtube.com/@CoreDumpped
 ) and his videos. 
 
-![Example Image](https://raw.githubusercontent.com/JBrosDevelopment/VirtualComputer/master/docs/blog/Picture2.png)
+![Example Image](https://raw.githubusercontent.com/JBrosDevelopment/VirtualComputer/refs/heads/master/blog/Picture2.png)
 
 In the picture above, you can see the high level language `let a = 5;` just creates a variable and sets its value to 5. In the assembly code, `MOV R0 5` moves the value 5 to register 0. It then stores the value in R0 to the memory at the address `11111110`. This is just a great way to visualize how code gets compiled into binary.
 
@@ -287,7 +287,7 @@ Here is a list of all the instructions:
 
 In the instructions that used the ALU flag, all that means is that when the ALU does an operation, it outputs specific "flags" to the CPU which are in there own 1 bit registers. There is the Zero flag, which is on if the last ALU operation returned zero. There is also the Negative flag, which is on if the last ALU operation returned a negative number.
 
-![Computer_Picture](https://raw.githubusercontent.com/JBrosDevelopment/VirtualComputer/master/docs/blog/Computer_Picture.png)
+![Computer_Picture](https://raw.githubusercontent.com/JBrosDevelopment/VirtualComputer/refs/heads/master/blog/Computer_Picture.png)
 
 
 ## Assembler
@@ -329,3 +329,123 @@ MSG R0
 
 ## Compiler
 
+The compiler is took a lot of work, but turned out really awesome. The compiler will take in C type language code and output the assembly version of it.
+
+ This simple program took me 27 bytes to write it in assembly. The compiler was able to use 38 bytes. It's not the smartest compiler it works.
+ ```c
+ uint8 a = 0;
+
+while (a < 5) {
+    a = a + 1,
+    char c = to_char(a),
+    print(c)
+}
+```
+
+The assembly output for this code is as follows:
+
+```asm
+MOV R0 #00000000
+STR R0 #11111110 ; store created variable ; BYTE ADDRESS 4
+LDR R0 #11111110 ; load variable ; value left
+MOV R1 #00000101 ; value right
+SUB R0 R1
+CMP_NEG R0 ; compare
+CPY R3 R0 ; copy value right ; get value for statement
+MOV R2 0 ; set R2 to 0
+SUB R2 R3 ; check if statement is true
+JMP_ZRO 37 ; jump if false
+LDR R0 #11111110 ; load variable ; value left
+MOV R1 #00000001 ; value right
+ADD R0 R1 ; math
+STR R0 #11111110 ; store variable
+LDR R3 #11111110 ; load variable
+MOV R2 48 ; 48 is ascii '0'
+ADD R3 R2 ; get ascii
+CPY R0 R3 ; move value to correct register
+STR R0 #11111101 ; store created variable
+LDR R2 #11111101 ; load variable
+MSG R2 ; print value
+JMP 4 ; jump back to start ; BYTE ADDRESS 38
+HALT
+```
+
+The binary code that was assembled from this:
+
+```
+110010000000000011000000111111101100010011111110110010010000010100010001111100001100111100000000110010100000000000011011111010100010010111000100111111101100100100000001000000011100000011111110110001111111111011001010001100000000111011001100110000001100000011111101110001101111110111011110111010000000010011111111
+```
+
+**Parser and Lexer**. I'm not going to explain the lexing and parsing part of the code because that's not the point of this project. I just copied and pasted the lexer and parser from my [calculator language](https://github.com/JBrosDevelopment/calc_lang) project and made some adjustments to it. It took a lot longer than expected but it was easier than making a new one from scratch. Go check it out if you want to see how it works. Also check out my post [Guide to Building Your own Programming Language with C#](https://jbrosdev.hashnode.dev/guide-to-building-your-own-programming-language-with-c) if you want to know how the lexing process works. I didn't actoually make a propert parser in that project though.
+
+**The Compiler**. This will basically go line by line and turn the C type code to the assembly equivelent. For example the code `print('c')` will look like this in assembly
+
+``` asm
+MOV R0 99 ; move the ASCII number for 'c' into register 0 
+MSG R0    ; print the value in register 0 to the general output as an ASCII character
+```
+
+The parser will take code that looks like `5 + 2 * 3` and put it into a binary tree like this:
+
+```
+    +
+   / \
+  5   *
+     / \
+    2   3
+```
+
+So the first thing the compiler will do is see what is on the top of the tree. In this example, it's the `+`. So it will load 5 into `R0` and then load 2 and 3 into there registers and do the multiplication. It will put the result in `R1` and do the addition with those. Here is what the assembly would look like:
+
+```asm
+MOV R0 2 
+MOV R1 3
+MUL R1 R0
+MOV R0 5
+ADD R0 R1
+```
+
+This is the optimized version, the actual assembly the compiler spits out is a little more rough. 
+
+This is what one of the matches look like in rust:
+```rs
+match node.token_type {
+    TokenType::Plus | TokenType::Dash | TokenType::Star | TokenType::Slash => {
+        let value_left = solve_node(node.operand1.as_ref().unwrap(), variables, "R0", virtual_registers, VariableType::UInt8, bytes);
+        let value_right = solve_node(node.operand2.as_ref().unwrap(), variables, "R1", virtual_registers, VariableType::UInt8, bytes);
+        let mut value = String::new();
+        
+        let left_byte = value_left.split(" ").collect::<Vec<&str>>()[2].to_string().chars().skip(1).collect::<String>();
+        value += format!("{} ; value left\n", value_left).as_str();
+        virtual_registers[0] = Byte::from_string(left_byte.clone());
+        
+        let right_byte = value_right.split(" ").collect::<Vec<&str>>()[2].to_string().chars().skip(1).collect::<String>();
+        value += format!("{} ; value right\n", value_right).as_str();
+        virtual_registers[1] = Byte::from_string(right_byte.clone());
+
+        let math = match node.token.token_type {
+            TokenType::Plus => "ADD",
+            TokenType::Dash => "SUB",
+            TokenType::Star => "MUL",
+            TokenType::Slash => "DIV",
+            _ => panic!("Invalid math operator")
+        };
+
+        if register == "R0" {
+            format!("{}{} R0 R1 ; math", value, math)
+        }
+        else {
+            format!("{}{} R0 R1 ; math\nCPY {} R0 ; copy value right", value, math, register)
+        }
+    }
+    // other implementations
+}
+```
+
+It's very rough and may be hard to read. Feel free to check out the code on [GitHub](https://github.com/JBrosDevelopment/VirtualComputer) but it may be hard to understand, sorry for that.
+
+![screen-shot-highlighted](https://raw.githubusercontent.com/JBrosDevelopment/VirtualComputer/refs/heads/master/blog/screen-shot-highlighted.png)
+
+## Overview
+
+Overall, this process was really fun and fulfilling. Everytime something just worked, it was so cool. It really showed the abstraction of programming, where today you don't ever need to worry about the binary or assembly. This was a great project and I highly recommend trying your hand at making one. If you want to dive deeper into how a computer works, I recommend watching [Core Dumpped](https://www.youtube.com/@CoreDumpped) and his videos. This project really wouln't have been possible without them. You can check out the code on [GitHub](https://github.com/JBrosDevelopment/VirtualComputer) if you want and try it out yourself.
