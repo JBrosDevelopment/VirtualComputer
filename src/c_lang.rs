@@ -21,7 +21,7 @@ pub struct Line {
 }
 #[derive(Clone, Debug, PartialEq)] 
 pub struct Token {
-    pub token_type: TokenType, pub value: String
+    token_type: TokenType, pub value: String
 }
 pub fn get_lexer_lines(contents: &str) -> Vec<Line> {
     let lines: Vec<&str> = contents.split(";").filter(|&x| x.trim() != "").collect();
