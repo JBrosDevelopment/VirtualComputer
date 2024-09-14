@@ -1,8 +1,10 @@
 pub mod assembly;
 pub mod c_lang;
 
+/// Defines the module for handling 8-bit version control operations.
 pub mod vc_8bit {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    // A single bit value stored as a boolean
     pub struct Bit {
         pub value: bool
     }
@@ -59,6 +61,7 @@ pub mod vc_8bit {
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    /// An 8 bit value stored as an array of 8 bits
     pub struct Byte {
         pub value: [Bit; 8]
     }
@@ -81,6 +84,23 @@ pub mod vc_8bit {
         }
     }
     impl Byte {
+        /// # from_string
+        /// Converts a string to a byte
+        /// if the length is 8, the string is interpreted as a binary string
+        /// else the string is interpreted as a decimal string
+        /// # Examples
+        /// binary
+        /// ```
+        /// use vc_8bit::Byte;
+        /// let byte = Byte::from_string(String::from("11111111"));
+        /// assert_eq!(byte.to_i32(), 255);
+        /// ```
+        /// decimal
+        /// ```
+        /// use vc_8bit::Byte;
+        /// let byte = Byte::from_string(String::from("255"));
+        /// assert_eq!(byte.to_i32(), 255);
+        /// ```
         pub fn from_string(value: String) -> Byte {
             if value.len() == 8 {   
                 let mut bits = [Bit::new(false); 8];
@@ -93,6 +113,7 @@ pub mod vc_8bit {
                 Byte::try_from(value.parse::<i32>().unwrap()).unwrap()
             }
         }
+        /// reverses the bits in the byte
         pub fn reverse(&mut self) -> Self {
             let mut bits = self.value;
             for i in 0..8 {
@@ -100,15 +121,18 @@ pub mod vc_8bit {
             }
             Byte { value: bits }
         } 
+        /// returns a new byte with all bits set to 0
         pub fn zero() -> Self {
             Byte { value: [Bit::new(false); 8] }
         } 
+        /// returns a new byte with all bits set to 1
         pub fn full() -> Self {
             Byte { value: [Bit::new(true); 8] }
         }
         pub fn new(bits: [Bit; 8]) -> Self {
             Byte { value: bits }
         }
+        /// returns the value of the byte as an i32
         pub fn to_i32(&self) -> i32 {
             let mut value = 0;
             let bit_count = self.value.len();
@@ -119,6 +143,7 @@ pub mod vc_8bit {
             }
             value
         }
+        /// returns the value of the byte as an u8
         pub fn to_u8(&self) -> u8 {
             let mut value = 0;
             for (i, bit) in self.value.iter().enumerate() {
@@ -128,6 +153,7 @@ pub mod vc_8bit {
             }
             value
         }
+        /// returns a new byte from an u8
         pub fn from_u8(mut value: u8) -> Self {
             let mut bits = [Bit { value: false }; 8];
 
@@ -139,6 +165,7 @@ pub mod vc_8bit {
             bits.reverse();
             Byte { value: bits }
         }
+        /// returns the value of the byte as an u8 array
         pub fn to_u8_array(&self) -> [u8; 8] {
             let mut value = [0; 8];
             for (i, bit) in self.value.iter().enumerate() {
@@ -198,9 +225,11 @@ pub mod vc_8bit {
         pub fn from_byte_to_bit_array(byte: Byte) -> [Bit; 8] {
             byte.value
         }
+        /// increments the value of the byte by 1
         pub fn increment(&mut self) {
             self.value = Byte::from_byte_to_bit_array(self.and(&Byte::full()).or(&self.not().and(&Byte::zero())));
         }
+        /// decrements the value of the byte by 1
         pub fn decrement(&mut self) {
             let i32 = self.to_i32();
             if i32 == 0 {
@@ -208,6 +237,26 @@ pub mod vc_8bit {
             }
             self.value = Byte::try_from(i32 - 1).unwrap().value;
         }
+        /// # Shift Array
+        /// Shifts the value of the byte by the given amount
+        /// # Parameters
+        /// * `value` - The value to shift
+        /// * `shift` - The amount to shift
+        /// # Examples
+        /// shift right
+        /// ```rust
+        /// use vc_8bit::Byte;
+        /// let mut byte = Byte::new([true, true, true, true, true, true, true, true]);
+        /// byte.shift(1);
+        /// assert_eq!(byte, Byte::new([false, true, true, true, true, true, true, true]));
+        /// ```
+        /// shift left
+        /// ```rust
+        /// use vc_8bit::Byte;
+        /// let mut byte = Byte::new([true, true, true, true, true, true, true, true]);
+        /// byte.shift(-1);
+        /// assert_eq!(byte, Byte::new([true, true, true, true, true, true, true, false]));
+        /// ```
         pub fn shift_array(value: Byte, shift: i32) -> Byte {
             let arr = [value.value[0].to_bool(), value.value[1].to_bool(), value.value[2].to_bool(), value.value[3].to_bool(), value.value[4].to_bool(), value.value[5].to_bool(), value.value[6].to_bool(), value.value[7].to_bool()];
             let mut result = [false; 8];
@@ -249,6 +298,7 @@ pub mod vc_8bit {
     }
 
     #[derive(Debug, Clone, Copy)]
+    /// A register that can be read and written to using its address
     pub struct Register {
         pub value: Byte,
         pub address: Byte
@@ -265,7 +315,9 @@ pub mod vc_8bit {
         }
     }
 
+    /// A 256 byte RAM
     const RAM_SIZE: usize = 256;
+    /// A 2 byte stream
     const STREAM_SIZE: usize = 2;
     #[derive(Debug, Clone, Copy)]
     pub struct RAM {
@@ -283,6 +335,7 @@ pub mod vc_8bit {
             }
             RAM { value: registers, index: Byte::zero() }
         }
+        /// Inserts a vector of bytes into the RAM
         pub fn insert_bytes(&mut self, bytes: Vec<Byte>) {
             for (i, byte) in bytes.iter().enumerate() {
                 self.write(Byte::try_from(i as i32).unwrap(), *byte);
@@ -306,6 +359,7 @@ pub mod vc_8bit {
         pub fn set_index(&mut self, index: Byte) {
             self.index = index;
         }
+        /// Returns an array of 2 bytes from the RAM at the index and increments the index by 2.
         pub fn get_byte_stream(&mut self) -> [Byte; STREAM_SIZE] {
             let mut bytes: [Byte; STREAM_SIZE] = [Byte::zero(); STREAM_SIZE];
             let i32_index = self.index.to_i32();
@@ -318,6 +372,7 @@ pub mod vc_8bit {
         }
     }
 
+    /// 8 ports
     const PORTS_SIZE: usize = 8;
     pub struct Ports {
         pub bus_dir: String
@@ -445,6 +500,7 @@ pub mod vc_8bit {
         pub fn decode(&mut self) {
             self.result = Self::decode_internal(self.axis_x, self.axis_y);
         }
+        /// Decode axis_x and axis_y into a 4-bit binary number
         pub fn decode_internal(axis_x: Bit, axis_y: Bit) -> [Bit; 4] {
             if !axis_x.value && !axis_y.value {
                 Self::BIT1
@@ -459,6 +515,7 @@ pub mod vc_8bit {
                 Self::BIT4
             }
         }
+        /// Decode axis_x and axis_y into a 4-bit binary number
         pub fn decode_internal_i32(axis_x: Bit, axis_y: Bit) -> i32 {
             if !axis_x.value && !axis_y.value {
                 1
@@ -482,6 +539,7 @@ pub mod vc_8bit {
     }
 
     #[derive(Debug, Clone, Copy)]
+    /// A virtual ALU component with 2 operands, a binary decoder, a byte arithmetic and the overflow, negative, and zero flags 
     pub struct ALU {
         pub value1: Byte,
         pub value2: Byte,
@@ -511,6 +569,7 @@ pub mod vc_8bit {
             self.value1 = value1;
             self.value2 = value2; 
         }
+        /// Compute the value of the ALU
         pub fn compute(&mut self) {
             self.decoder.decode();
             self.compute_decoder(self.decoder);
@@ -525,6 +584,26 @@ pub mod vc_8bit {
                 _ => {}
             }
         }
+        /// # Add
+        /// Adds value1 and value2 and stores the result into value1
+        /// Updates the overflow, negative, and zero flags
+        /// # Example
+        /// ```
+        /// use vc_8bit::ALU;
+        /// use vc_8bit::Byte;
+        /// use vc_8bit::Bit;
+        /// let mut alu = ALU::new(Byte::try_from(32).unwrap(), Byte::try_from(23).unwrap());
+        /// alu.decoder.axis_x = Bit::new(false);
+        /// alu.decoder.axis_y = Bit::new(false);
+        /// alu.compute();
+        /// assert_eq!(alu.value1.to_i32(), 55);
+        /// assert_eq!(alu.overflow.value, false);
+        /// assert_eq!(alu.negative.value, false);
+        /// assert_eq!(alu.zero.value, false);
+        /// ```
+        /// # Panics
+        /// If value1 and value2 are not 8-bit numbers.
+        /// If value1 + value2 overflows 256 
         pub fn add(&mut self) {
             self.math.value1 = self.value1;
             self.math.value2 = self.value2;
@@ -536,6 +615,25 @@ pub mod vc_8bit {
             self.negative = Bit::new(result.to_i32() < 0);
         }
 
+        /// # Subtract
+        /// Subtracts value1 and value2 and stores the result into value1
+        /// Updates the overflow, negative, and zero flags
+        /// # Example
+        /// ```
+        /// use vc_8bit::ALU;
+        /// use vc_8bit::Byte;
+        /// use vc_8bit::Bit;
+        /// let mut alu = ALU::new(Byte::try_from(15).unwrap(), Byte::try_from(23).unwrap());
+        /// alu.decoder.axis_x = Bit::new(false);
+        /// alu.decoder.axis_y = Bit::new(true);
+        /// alu.compute();
+        /// assert_eq!(alu.value1.to_i32(), 8); // returns absolute value
+        /// assert_eq!(alu.overflow.value, false);
+        /// assert_eq!(alu.negative.value, true); // sets negative flag to true
+        /// assert_eq!(alu.zero.value, false);
+        /// ```
+        /// # Panics
+        /// If value1 and value2 are not 8-bit numbers. 
         pub fn sub(&mut self) {
             self.math.value1 = self.value1;
             self.math.value2 = self.value2;
@@ -547,6 +645,26 @@ pub mod vc_8bit {
             self.negative = Bit::new(result.to_i32() < 0);
         }
 
+        /// # Multiply
+        /// Multiplies value1 and value2 and stores the result into value1
+        /// Updates the overflow, negative, and zero flags
+        /// # Example
+        /// ```
+        /// use vc_8bit::ALU;
+        /// use vc_8bit::Byte;
+        /// use vc_8bit::Bit;
+        /// let mut alu = ALU::new(Byte::try_from(15).unwrap(), Byte::try_from(3).unwrap());
+        /// alu.decoder.axis_x = Bit::new(true);
+        /// alu.decoder.axis_y = Bit::new(false);
+        /// alu.compute();
+        /// assert_eq!(alu.value1.to_i32(), 45);
+        /// assert_eq!(alu.overflow.value, false);
+        /// assert_eq!(alu.negative.value, false);
+        /// assert_eq!(alu.zero.value, false);
+        /// ```
+        /// # Panics
+        /// If value1 and value2 are not 8-bit numbers.
+        /// If value1 * value2 overflows 256
         pub fn mul(&mut self) {
             self.math.value1 = self.value1;
             self.math.value2 = self.value2;
@@ -558,6 +676,25 @@ pub mod vc_8bit {
             self.negative = Bit::new(result.to_i32() < 0);
         }
 
+        /// # Divide
+        /// Divides value1 and value2 and stores the result into value1
+        /// Updates the overflow, negative, and zero flags
+        /// # Example
+        /// ```
+        /// use vc_8bit::ALU;
+        /// use vc_8bit::Byte;
+        /// use vc_8bit::Bit;
+        /// let mut alu = ALU::new(Byte::try_from(15).unwrap(), Byte::try_from(3).unwrap());
+        /// alu.decoder.axis_x = Bit::new(true);
+        /// alu.decoder.axis_y = Bit::new(true);
+        /// alu.compute();
+        /// assert_eq!(alu.value1.to_i32(), 5);
+        /// assert_eq!(alu.overflow.value, false);
+        /// assert_eq!(alu.negative.value, false);
+        /// assert_eq!(alu.zero.value, false);
+        /// ```
+        /// # Panics
+        /// If value1 and value2 are not 8-bit numbers.
         pub fn div(&mut self) {
             if self.value2.to_i32() == 0 {
                 panic!("Division by zero");
@@ -603,6 +740,7 @@ pub mod vc_8bit {
         pub fn move_byte_in_register_4(&mut self, reg_4: Byte) {
             self.reg_4.value = reg_4;
         }
+        /// returns register from i32 value 1 through 4 for registers R0, R1, R2, and R3
         pub fn get_register(&mut self, reg: i32) -> Register {
             match reg {
                 1 => self.reg_1,
@@ -641,6 +779,19 @@ pub mod vc_8bit {
         pub fn move_byte_from_register(&mut self, register: Register, address_1: Byte) {
             self.ram.write(address_1, register.read());
         }
+        /// # Run
+        /// Runs the program on the VC
+        /// # Example
+        /// ```
+        /// use vc_8bit::Computer;
+        /// use vc_8bit::Byte;
+        /// let bytes = vec![Byte::from_string("00110110"), Byte::from_string("1001100")];
+        /// let mut computer: Computer = Computer::new();
+        /// computer.ram.insert_bytes(bytes);
+        /// computer.run();
+        /// ```
+        /// # Panics
+        /// If the program contains an invalid instruction
         pub fn run(&mut self) {
             loop {
                 // get the 2 byte stream
@@ -655,6 +806,18 @@ pub mod vc_8bit {
                 }
             }
         }
+        /// # Run Stream
+        /// Runs the stream on the VC. 
+        /// # Example
+        /// ```
+        /// use vc_8bit::Computer;
+        /// use vc_8bit::Byte;
+        /// let bytes = vec![Byte::from_string("00110110"), Byte::from_string("1001100")];
+        /// let mut computer: Computer = Computer::new();
+        /// computer.run_stream(bytes);
+        /// ```
+        /// # Panics
+        /// If the program contains an invalid instruction
         pub fn run_stream(&mut self, stream: [Byte; STREAM_SIZE]) -> bool {
             let first_byte = stream[0].value;
             let mut halted = false;

@@ -2,6 +2,20 @@ use std::io::{self, Result};
 use std::vec::Vec;
 use crate::assembly::{string_to_bytes, compile_assembly_to_binary};
 use crate::vc_8bit::Byte;
+/// # Compile
+/// Compiles code to Assembly
+/// # Arguments
+/// * `contents` - code
+/// # Returns
+/// * `String` - Assembly code
+/// # Example
+/// ```
+/// use vc_8bit::c_lang;
+/// let contents = "print('a');";
+/// let result = c_lang::compile(&contents);
+/// ```
+/// # Panics
+/// This function will panic if the code is invalid
 pub fn compile(contents: &String) -> String {
     let lex: Vec<Line> = get_lexer_lines(contents);
     let par = parse(lex);
@@ -9,21 +23,21 @@ pub fn compile(contents: &String) -> String {
 }
 
 #[derive(Clone, Debug, PartialEq)] 
-pub(crate) enum TokenType {
+enum TokenType {
     Plus, Dash, Star, Slash, Equal, GreaterThan, LessThan, SingleQuote, Not, EqualCompare, And, Or, Identifier,
     OpenParen, CloseParen, OpenCurley, CloseCurley, Comma, NotEqual, AndAnd, OrOr, OpenBracket, CloseBracket, XOR,
     GreaterThanOrEqualTo, LessThanOrEqualTo, Number, TypeName, Statement, Boolean, ShiftLeft, ShiftRight, None, Increment, Decrement
 }
 
 #[derive(Clone, Debug)]
-pub struct Line {
-    pub tokens: Vec<Token>, pub number: i32
+ struct Line {
+     tokens: Vec<Token>,  number: i32
 }
 #[derive(Clone, Debug, PartialEq)] 
 pub struct Token {
-    token_type: TokenType, pub value: String
+    token_type: TokenType,  value: String
 }
-pub fn get_lexer_lines(contents: &str) -> Vec<Line> {
+fn get_lexer_lines(contents: &str) -> Vec<Line> {
     let lines: Vec<&str> = contents.split(";").filter(|&x| x.trim() != "").collect();
     let mut lexer_lines: Vec<Line> = Vec::new();
     
@@ -36,7 +50,7 @@ pub fn get_lexer_lines(contents: &str) -> Vec<Line> {
     }
     lexer_lines
 }
-pub fn get_lexer_line(line: &str, line_number: i32, ) -> Line {
+fn get_lexer_line(line: &str, line_number: i32, ) -> Line {
     let chars: Vec<&str> = line.split("").collect();
     let mut tokens: Vec<Token> = Vec::new();
     let mut single: bool = false;
@@ -263,13 +277,13 @@ pub fn get_lexer_line(line: &str, line_number: i32, ) -> Line {
 
     Line { tokens:tokens, number:line_number }
 }
-pub fn parse_str_to_i32(s: &str) -> Result<i32> {
+fn parse_str_to_i32(s: &str) -> Result<i32> {
     match s.trim().parse::<i32>() {
         Ok(num) => Ok(num),
         Err(e) => Err(io::Error::new(io::ErrorKind::InvalidData, e)),
     }
 }
-pub fn is_alphabetical(s: &str) -> bool {
+fn is_alphabetical(s: &str) -> bool {
     if s.is_empty() {
         return false;
     }
@@ -299,11 +313,8 @@ pub struct ExprNode {
 }
 
 impl ExprNode {
-    pub fn is_func(&self) -> bool {
+    fn is_func(&self) -> bool {
         self.func_name.is_some() && self.func_parameters.is_some() 
-    }
-    pub fn is_leaf(&self) -> bool {
-        self.operand1.is_none() && self.operand2.is_none()
     }
     fn new_num(num: Token, line: i32) -> Self {
         ExprNode {
@@ -410,7 +421,7 @@ pub fn precedence(op: String) -> i32 {
         _ => 0,
     }
 }
-pub fn parse(lexer_lines: Vec<Line>) -> Vec<Option<ExprNode>> {
+fn parse(lexer_lines: Vec<Line>) -> Vec<Option<ExprNode>> {
     let mut lines = lexer_lines.iter().peekable();
     let mut returns: Vec<Option<ExprNode>> = Vec::new();
 

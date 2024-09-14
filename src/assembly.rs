@@ -1,5 +1,19 @@
 use crate::vc_8bit::{Byte, Bit};
 use regex::Regex;
+
+/// # string_to_bytes
+/// Converts a string to a vector of bytes
+/// # Arguments
+/// * `contents` - The string to convert
+/// # Returns
+/// * `Vec<Byte>` - The vector of bytes
+/// # Examples
+/// ```
+/// use vc_8bit::vc_8bit::{Byte, Bit};
+/// use vc_8bit::assembly::string_to_bytes;
+/// let bytes = string_to_bytes("11010100");
+/// assert_eq!(bytes, vec![Byte::new([Bit::new(true), Bit::new(false), Bit::new(true), Bit::new(false), Bit::new(true), Bit::new(false), Bit::new(false), Bit::new(true)])]);
+/// ```
 pub fn string_to_bytes(contents: &str) -> Vec<Byte> {
     let mut chars = contents.chars().collect::<Vec<char>>();
     chars.reverse();
@@ -17,6 +31,26 @@ pub fn string_to_bytes(contents: &str) -> Vec<Byte> {
     }
     bytes
 }
+/// # compile_assembly_to_binary
+/// Compiles assembly code to binary
+/// # Arguments
+/// * `contents` - The assembly code to compile
+/// # Returns
+/// * `String` - The binary code
+/// # Examples
+/// ```
+/// use vc_8bit::vc_8bit::{Byte, Bit};
+/// use vc_8bit::assembly::compile_assembly_to_binary;
+/// let bytes = compile_assembly_to_binary("MOV R2 255");
+/// assert_eq!(bytes, "1100101011111111");
+/// ```
+/// # Panics
+/// This function will panic if the assembly code is invalid
+/// ```should_panic
+/// use vc_8bit::vc_8bit::{Byte, Bit};
+/// use vc_8bit::assembly::compile_assembly_to_binary;
+/// let bytes = compile_assembly_to_binary("BLAH 256");
+/// ```
 pub fn compile_assembly_to_binary(contents: &str) -> String {
     let mut out = String::new();
     let mut vars: Vec<(String, Byte)> = vec![];
@@ -228,6 +262,21 @@ pub fn compile_assembly_to_binary(contents: &str) -> String {
     }
     out
 }
+/// # Get Register
+/// Gets the register from a string
+/// # Arguments
+/// * `content` - The string to get the register from
+/// # Returns
+/// * `String` - The register
+/// # Examples
+/// ```
+/// use vc_8bit::vc_8bit::{Byte, Bit};
+/// use vc_8bit::assembly::get_register;
+/// let register = get_register("R0");
+/// assert_eq!(register, "00");
+/// ```    
+/// # Panics
+/// Will panic if the register is invalid
 fn get_register(content: &str) -> &str {
     match content.chars().take_while(|x| x != &';').collect::<String>().to_uppercase().as_str() {
         "R0" => "00",
@@ -237,6 +286,22 @@ fn get_register(content: &str) -> &str {
         _ => panic!("Invalid register")
     }
 }
+
+/// # Get Binary
+/// Gets the binary from a string
+/// # Arguments
+/// * `content` - The string to get the binary from
+/// # Returns
+/// * `String` - The binary
+/// # Examples
+/// ```
+/// use vc_8bit::vc_8bit::{Byte, Bit};
+/// use vc_8bit::assembly::get_binary;
+/// let binary = get_binary("255", &Vec::new());
+/// assert_eq!(binary, "11111111");
+/// ```
+/// # Panics
+/// Will panic if value is not a number, hexadecimal, binary sequence, or variable
 fn get_binary(_content: &str, vars: &Vec<(String, Byte)>) -> String {
     let content = _content.chars().take_while(|x| x != &';').collect::<String>();
     let binary_regex = Regex::new(r"^#[01]{8}$").unwrap(); // Matches #00000000 (binary)
