@@ -6,8 +6,7 @@
 
 **What?** I have made what I'm going to be calling a **Virtual Computer**. I will be refering to it as the **VC** throughout this project. It is basically a big function that will take an array of bytes and run the instructions associated with the bytes. I have emulated components like a **Binary Decoder**, **RAM**, **ALU**, and **CPU**. On top of this, I've made an assembler that will take assembly code and convert it to binary. And to abstract even further, I made a compiler that will compiler a custom *C type* code to the custom assembly.
 
-**How?** I'm using the programming language **Rust** for this project. What the VC does is take the binary and figure out the instructions that go with it. It uses Binary Decoders in a *match* statement to decide what instruction it is. Every Byte is an instruction. Some examples of instructions are moving from memory to registers, adding the values from one register to another using the ALU. This is why assembly is basically binary. Maybe the binary sequence `01001110` is the `MOV` instruction. All an assembler does is convert the instructions like `CPY`, `LDR`, and `ADD` to there corrosponding bytes. It gets a little more complex, like maybe the first 6 bits is for the instruction, and the last 2 bits is for the register. If this sounds interesting to you, I highly recommend watching [Core Dumpped](https://www.youtube.com/@CoreDumpped
-) and his videos. 
+**How?** I'm using the programming language **Rust** for this project. What the VC does is take the binary and figure out the instructions that go with it. It uses Binary Decoders in a *match* statement to decide what instruction it is. Every Byte is an instruction. Some examples of instructions are moving from memory to registers, adding the values from one register to another using the ALU. This is why assembly is basically binary. Maybe the binary sequence `01001110` is the `MOV` instruction. All an assembler does is convert the instructions like `CPY`, `LDR`, and `ADD` to there corrosponding bytes. It gets a little more complex, like maybe the first 6 bits is for the instruction, and the last 2 bits is for the register. If this sounds interesting to you, I highly recommend watching [Core Dumpped](https://www.youtube.com/@CoreDumpped) and his videos. 
 
 ![Example Image](https://raw.githubusercontent.com/JBrosDevelopment/VirtualComputer/refs/heads/master/blog/Picture2.png)
 
@@ -331,9 +330,9 @@ MSG R0
 
 The compiler is took a lot of work, but turned out really awesome. The compiler will take in C type language code and output the assembly version of it.
 
- This simple program took me 27 bytes to write it in assembly. The compiler was able to use 38 bytes. It's not the smartest compiler it works.
- ```c
- uint8 a = 0;
+This simple program took me 27 bytes to write it in assembly. The compiler was able to use 38 bytes. It's not the smartest compiler it works.
+```c
+uint8 a = 0;
 
 while (a < 5) {
     a = a + 1,

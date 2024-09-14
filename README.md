@@ -4,11 +4,11 @@
 
 This project is a virtual 8 bit computer that takes a vector of bytes and runs it as instructions It includes the virtual machine, assembler, and compiler for custom assembly and high level language.
 
-I created a blog post about this project and you can find that on **[Hashnode](https://jbrosdev.hashnode.dev/)**. It goes deeper into explaining the different parts of this project.
+I created a blog post about this project and you can find that on **[Hashnode](https://jbrosdev.hashnode.dev/making-a-virtual-machine-binary-to-assembly-to-c-all-in-rust)**. It goes deeper into explaining the different parts of this project.
 
 ## Add to Your Project
 
-You can add this to your project with the terminal command:
+You can add this to your Rust project with the terminal command:
 
 ```
 cargo add vc_8bit
