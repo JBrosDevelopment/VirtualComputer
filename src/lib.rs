@@ -1,7 +1,7 @@
 pub mod assembly;
 pub mod c_lang;
 
-pub mod vc {
+pub mod vc_8bit {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub struct Bit {
         pub value: bool

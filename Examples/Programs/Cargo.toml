@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vc = { path = "../../" }
+vc_8bit = { path = "../../" }

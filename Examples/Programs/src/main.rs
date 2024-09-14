@@ -1,4 +1,4 @@
-use vc::{assembly, c_lang, vc::Computer};
+use vc_8bit::{assembly, c_lang, vc_8bit::Computer};
 fn main() { 
     run_compiled_code_with_debugging();
 }

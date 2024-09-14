@@ -1,7 +1,7 @@
 use std::io::{self, Result};
 use std::vec::Vec;
 use crate::assembly::{string_to_bytes, compile_assembly_to_binary};
-use crate::vc::Byte;
+use crate::vc_8bit::Byte;
 pub fn compile(contents: &String) -> String {
     let lex: Vec<Line> = get_lexer_lines(contents);
     let par = parse(lex);
@@ -1011,7 +1011,7 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
                         let mut assembly = String::new();
                         for (i, value_node) in array_values.iter().enumerate() {
                             let value = solve_node(value_node.iter().nth(0).unwrap().as_ref().unwrap(), variables, "R0", virtual_registers, v_type, bytes);
-                            let address = (crate::vc::MAXBYTE - (variables.len() as i32 + 1)).try_into().unwrap();
+                            let address = (crate::vc_8bit::MAXBYTE - (variables.len() as i32 + 1)).try_into().unwrap();
                             variables.push(Variable::new(format!("{}|{}", var_name.token.value, i), address, v_type.clone(), true));
                             assembly += format!("{}\nSTR R0 #{} ; store array element {}\n", value, address.to_string(), i).as_str();
                         }
@@ -1023,7 +1023,7 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
                 }
 
                 let value = solve_node(node.operand2.as_ref().unwrap(), variables, "R0", virtual_registers, v_type, bytes);
-                let address = (crate::vc::MAXBYTE - (variables.len() as i32 + 1)).try_into().unwrap();
+                let address = (crate::vc_8bit::MAXBYTE - (variables.len() as i32 + 1)).try_into().unwrap();
                 variables.push(Variable::new(var_name.token.value.clone(), address, v_type, false));
                 virtual_registers[0] = address;
                 format!("{}\nSTR R0 #{} ; store created variable", value, address.to_string())
