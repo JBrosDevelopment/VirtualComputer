@@ -444,8 +444,8 @@ match node.token_type {
 
 It's very rough and may be hard to read. Feel free to check out the code on [GitHub](https://github.com/JBrosDevelopment/VirtualComputer) but it may be hard to understand, sorry for that.
 
-![screen-shot-highlighted](https://raw.githubusercontent.com/JBrosDevelopment/VirtualComputer/refs/heads/master/blog/screen-shot-highlighted.png)
-
 ## Overview
 
 Overall, this process was really fun and fulfilling. Everytime something just worked, it was so cool. It really showed the abstraction of programming, where today you don't ever need to worry about the binary or assembly. This was a great project and I highly recommend trying your hand at making one. If you want to dive deeper into how a computer works, I recommend watching [Core Dumpped](https://www.youtube.com/@CoreDumpped) and his videos. This project really wouln't have been possible without them. You can check out the code on [GitHub](https://github.com/JBrosDevelopment/VirtualComputer) if you want and try it out yourself.
+
+![screen-shot-highlighted](https://raw.githubusercontent.com/JBrosDevelopment/VirtualComputer/refs/heads/master/blog/screen-shot-highlighted.png)
