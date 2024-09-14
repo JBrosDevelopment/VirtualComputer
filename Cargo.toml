@@ -2,6 +2,8 @@
 name = "vc"
 version = "0.1.0"
 edition = "2021"
+description = "This project is a virtual computer that takes a vector of bytes and runs it as instructions. Also included is a complete assembler and compiler."
+license = "MIT"
 
 [dependencies]
 regex = "1.10.6"
