@@ -1,6 +1,5 @@
-use vc::{Byte, Bit};
+use crate::vc::{Byte, Bit};
 use regex::Regex;
-
 pub fn string_to_bytes(contents: &str) -> Vec<Byte> {
     let mut chars = contents.chars().collect::<Vec<char>>();
     chars.reverse();

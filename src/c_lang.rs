@@ -1,10 +1,7 @@
-use core::panic;
 use std::io::{self, Result};
 use std::vec::Vec;
-use crate::assembly;
-
-use vc::Byte;
-
+use crate::assembly::{string_to_bytes, compile_assembly_to_binary};
+use crate::vc::Byte;
 pub fn compile(contents: &String) -> String {
     let lex: Vec<Line> = get_lexer_lines(contents);
     let par = parse(lex);
@@ -16,47 +13,6 @@ pub(crate) enum TokenType {
     Plus, Dash, Star, Slash, Equal, GreaterThan, LessThan, SingleQuote, Not, EqualCompare, And, Or, Identifier,
     OpenParen, CloseParen, OpenCurley, CloseCurley, Comma, NotEqual, AndAnd, OrOr, OpenBracket, CloseBracket, XOR,
     GreaterThanOrEqualTo, LessThanOrEqualTo, Number, TypeName, Statement, Boolean, ShiftLeft, ShiftRight, None, Increment, Decrement
-}
-impl TokenType {
-    pub fn to_string(&self) -> String {
-        match self {
-            TokenType::Plus => "Plus".to_string(),
-            TokenType::Dash => "Dash".to_string(),
-            TokenType::Star => "Star".to_string(),
-            TokenType::Slash => "Slash".to_string(),
-            TokenType::Equal => "Equal".to_string(),
-            TokenType::OpenParen => "OpenParen".to_string(),
-            TokenType::CloseParen => "CloseParen".to_string(),
-            TokenType::OpenCurley => "OpenCurley".to_string(),
-            TokenType::CloseCurley => "CloseCurley".to_string(),
-            TokenType::GreaterThan => "GreaterThan".to_string(),
-            TokenType::GreaterThanOrEqualTo => "GreaterThanOrEqualTo".to_string(),
-            TokenType::LessThan => "LessThan".to_string(),
-            TokenType::LessThanOrEqualTo => "LessThanOrEqualTo".to_string(),
-            TokenType::Comma => "Comma".to_string(),
-            TokenType::Number => "Number".to_string(),
-            TokenType::Identifier => "Identifier".to_string(),
-            TokenType::None => "None".to_string(),
-            TokenType::SingleQuote => "SingleQuote".to_string(),
-            TokenType::NotEqual => "NotEqual".to_string(),
-            TokenType::Not => "Not".to_string(),
-            TokenType::AndAnd => "AndAnd".to_string(),
-            TokenType::OrOr => "OrOr".to_string(),
-            TokenType::TypeName => "TypeName".to_string(),
-            TokenType::Statement => "Statement".to_string(),
-            TokenType::EqualCompare => "EqualCompare".to_string(),
-            TokenType::OpenBracket => "OpenBracket".to_string(),
-            TokenType::CloseBracket => "CloseBracket".to_string(),
-            TokenType::Boolean => "Boolean".to_string(),
-            TokenType::And => "And".to_string(),
-            TokenType::Or => "Or".to_string(),
-            TokenType::ShiftLeft => "ShiftLeft".to_string(),
-            TokenType::ShiftRight => "ShiftRight".to_string(),
-            TokenType::XOR => "XOR".to_string(),
-            TokenType::Increment => "Increment".to_string(),
-            TokenType::Decrement => "Decrement".to_string(),
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -1020,8 +976,8 @@ pub fn interpret(lines: Vec<Option<ExprNode>>) -> String {
             let contents = solve_node(&line, &mut variables, "R0", &mut virtual_registers, VariableType::None, &mut bytes);
             result += contents.clone().as_str().trim();
             
-            let assembly_to_binary = &assembly::compile_assembly_to_binary(contents.as_str());
-            let bytes_vec = assembly::string_to_bytes(assembly_to_binary);
+            let assembly_to_binary = &compile_assembly_to_binary(contents.as_str());
+            let bytes_vec = string_to_bytes(assembly_to_binary);
             bytes += bytes_vec.len() as i32;
             result += format!(" ; BYTE ADDRESS {bytes}\n").as_str();
         }
@@ -1055,7 +1011,7 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
                         let mut assembly = String::new();
                         for (i, value_node) in array_values.iter().enumerate() {
                             let value = solve_node(value_node.iter().nth(0).unwrap().as_ref().unwrap(), variables, "R0", virtual_registers, v_type, bytes);
-                            let address = (vc::MAXBYTE - (variables.len() as i32 + 1)).try_into().unwrap();
+                            let address = (crate::vc::MAXBYTE - (variables.len() as i32 + 1)).try_into().unwrap();
                             variables.push(Variable::new(format!("{}|{}", var_name.token.value, i), address, v_type.clone(), true));
                             assembly += format!("{}\nSTR R0 #{} ; store array element {}\n", value, address.to_string(), i).as_str();
                         }
@@ -1067,7 +1023,7 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
                 }
 
                 let value = solve_node(node.operand2.as_ref().unwrap(), variables, "R0", virtual_registers, v_type, bytes);
-                let address = (vc::MAXBYTE - (variables.len() as i32 + 1)).try_into().unwrap();
+                let address = (crate::vc::MAXBYTE - (variables.len() as i32 + 1)).try_into().unwrap();
                 variables.push(Variable::new(var_name.token.value.clone(), address, v_type, false));
                 virtual_registers[0] = address;
                 format!("{}\nSTR R0 #{} ; store created variable", value, address.to_string())
@@ -1328,8 +1284,8 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
             for i in 0..node.statement_lines.as_ref().unwrap().len() {
                 lines += format!("{}\n", solve_node(node.statement_lines.as_ref().unwrap().iter().nth(i).unwrap(), variables, register, virtual_registers, expected_value, bytes)).as_str();
             }
-            let assembly_to_binary = &assembly::compile_assembly_to_binary(format!("{}\n{}", check.clone(), lines).as_str());
-            let bytes_vec = assembly::string_to_bytes(assembly_to_binary);
+            let assembly_to_binary = &compile_assembly_to_binary(format!("{}\n{}", check.clone(), lines).as_str());
+            let bytes_vec = string_to_bytes(assembly_to_binary);
             let end_bytes = bytes_vec.len() as i32 + *bytes + 2;
             
             if node.token.value == "if" {
