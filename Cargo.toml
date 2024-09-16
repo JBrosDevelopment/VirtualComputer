@@ -1,6 +1,6 @@
 [package]
 name = "vc_8bit"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2021"
 description = "This project is a virtual computer that takes a vector of bytes and runs it as instructions. Also included is a complete assembler and compiler."
 license = "MIT"

@@ -56,9 +56,9 @@ dependencies = [
 
 [[package]]
 name = "vc_8bit"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcc73296a4c72f86e0cd6bf056c8ec5e4fc29d2c61a6510a4e91af0e6000cb80"
+checksum = "23cea954b0d83a56b0dee4d3f5f678e3ba9eafe115b47204a122ddac18bdede9"
 dependencies = [
  "regex",
 ]

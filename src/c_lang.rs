@@ -23,7 +23,7 @@ pub fn compile(contents: &String) -> String {
 }
 
 #[derive(Clone, Debug, PartialEq)] 
-enum TokenType {
+pub enum TokenType {
     Plus, Dash, Star, Slash, Equal, GreaterThan, LessThan, SingleQuote, Not, EqualCompare, And, Or, Identifier,
     OpenParen, CloseParen, OpenCurley, CloseCurley, Comma, NotEqual, AndAnd, OrOr, OpenBracket, CloseBracket, XOR,
     GreaterThanOrEqualTo, LessThanOrEqualTo, Number, TypeName, Statement, Boolean, ShiftLeft, ShiftRight, None, Increment, Decrement
@@ -31,11 +31,11 @@ enum TokenType {
 
 #[derive(Clone, Debug)]
 pub struct Line {
-     tokens: Vec<Token>,  number: i32
+    pub tokens: Vec<Token>, pub number: i32
 }
 #[derive(Clone, Debug, PartialEq)] 
 pub struct Token {
-    token_type: TokenType,  value: String
+    pub token_type: TokenType, pub value: String
 }
 pub fn get_lexer_lines(contents: &str) -> Vec<Line> {
     let lines: Vec<&str> = contents.split(";").filter(|&x| x.trim() != "").collect();

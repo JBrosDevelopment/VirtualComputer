@@ -18,9 +18,9 @@ fn main() {
 
     let mut constants: Vec<(String, String)> = vec![];
     let mut lines: Vec<String> = vec![];
-    for _line in updated_program.lines().map(|x| x.to_string()).collect::<Vec<String>>() {
-        let line = _line.replace(";", "");
-        let parts = line.trim().split(" ").map(|x| x.to_string()).collect::<Vec<String>>();
+    for line in updated_program.lines().map(|x| x.to_string()).collect::<Vec<String>>() {
+        let lexer_line = c_lang::get_lexer_line(line.as_str(), 0);
+        let parts = lexer_line.tokens.iter().map(|x| x.value.to_string()).collect::<Vec<String>>();
         if parts.len() == 4 && parts[0] == "const" && parts[2] == "=" {
             let name = parts[1].to_string();
             let value = parts[3].to_string();
@@ -44,6 +44,10 @@ fn main() {
     };
     let program_with_constants = lines.join("\n");
 
+    println!("- UPDATED CODE:\n{}", program_with_constants);
+
+    c_lang::run_compiled_code_with_debugging(&program_with_constants);
+    /*
     // compile code
     let asm = c_lang::compile(&program_with_constants);
     
@@ -55,4 +59,5 @@ fn main() {
     let mut computer: Computer = Computer::new();
     computer.ram.insert_bytes(bytes);
     computer.run();
+    */
 }
