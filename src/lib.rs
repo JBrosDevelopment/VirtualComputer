@@ -400,7 +400,7 @@ pub mod vc_8bit {
                     .map(|x| Bit::new(x == 1))
                     .collect::<Vec<Bit>>()
                     .try_into()
-                    .unwrap()
+                    .unwrap_or([Bit::new(false); 8])
             );
             byte
         }

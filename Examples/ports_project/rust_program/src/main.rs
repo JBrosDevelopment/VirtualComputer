@@ -35,10 +35,10 @@ fn main() {
                         None => new_parts.push(parts[i].to_string()),
                     };
                 }
-                lines.push(format!("{};", new_parts.join(" ")));
+                lines.push(new_parts.join(" "));
             }
             else {
-                lines.push(format!("{};", line.to_string()));
+                lines.push(line.to_string());
             }
         }
     };

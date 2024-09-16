@@ -5,9 +5,9 @@ const RIGHT_ARROW = 0b00111110;
 
 while (true) {
     uint8 keyboard = read_port(7),
-
-    if (keyboard == UP_ARROW) {
-        println('u'),
-        write_port(7, 0)
-    }
+    out(keyboard),
+    print(' '),
+    char c = to_char(keyboard),
+    print(c),
+    print('\n')
 }
