@@ -1,6 +1,8 @@
 [package]
-name = "ports_project"
+name = "rust_program"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+regex = "1.10.6"
+vc_8bit = "0.1.2"

@@ -1,7 +1,7 @@
 use std::io::{self, Result};
 use std::vec::Vec;
 use crate::assembly::{string_to_bytes, compile_assembly_to_binary};
-use crate::vc_8bit::Byte;
+use crate::vc_8bit::{self, Byte};
 /// # Compile
 /// Compiles code to Assembly
 /// # Arguments
@@ -30,14 +30,14 @@ enum TokenType {
 }
 
 #[derive(Clone, Debug)]
- struct Line {
+pub struct Line {
      tokens: Vec<Token>,  number: i32
 }
 #[derive(Clone, Debug, PartialEq)] 
 pub struct Token {
     token_type: TokenType,  value: String
 }
-fn get_lexer_lines(contents: &str) -> Vec<Line> {
+pub fn get_lexer_lines(contents: &str) -> Vec<Line> {
     let lines: Vec<&str> = contents.split(";").filter(|&x| x.trim() != "").collect();
     let mut lexer_lines: Vec<Line> = Vec::new();
     
@@ -50,7 +50,7 @@ fn get_lexer_lines(contents: &str) -> Vec<Line> {
     }
     lexer_lines
 }
-fn get_lexer_line(line: &str, line_number: i32, ) -> Line {
+pub fn get_lexer_line(line: &str, line_number: i32, ) -> Line {
     let chars: Vec<&str> = line.split("").collect();
     let mut tokens: Vec<Token> = Vec::new();
     let mut single: bool = false;
@@ -421,7 +421,7 @@ pub fn precedence(op: String) -> i32 {
         _ => 0,
     }
 }
-fn parse(lexer_lines: Vec<Line>) -> Vec<Option<ExprNode>> {
+pub fn parse(lexer_lines: Vec<Line>) -> Vec<Option<ExprNode>> {
     let mut lines = lexer_lines.iter().peekable();
     let mut returns: Vec<Option<ExprNode>> = Vec::new();
 
@@ -1325,4 +1325,32 @@ pub fn get_index_from_register(register: &str) -> usize {
         "R3" => 3,
         _ => panic!("Invalid register: {}", register),
     }
+}
+
+/// # Run Compiled Code
+/// * Lexes Code
+/// * Parses Code
+/// * Compiles Code
+/// * Runs Code
+/// # Panics
+/// This function will panic if the code is invalid
+pub fn run_compiled_code_with_debugging(contents: &String) {
+    println!("- CLANG:");
+    let lex = get_lexer_lines(contents);
+    let par = parse(lex);
+    for l in par.clone() { println!("{}", fmt_expr(&l.unwrap())) }
+    
+    println!("\n- ASM:"); 
+    let value = interpret(par.clone());
+    println!("{value}");
+
+    println!("\n- OUT:");
+    println!("{}", compile_assembly_to_binary(&value));
+
+    println!("\n- RUN:");
+    let contents = compile_assembly_to_binary(&value);
+    let bytes = string_to_bytes(contents.as_str());
+    let mut computer: vc_8bit::Computer = vc_8bit::Computer::new();
+    computer.ram.insert_bytes(bytes);
+    computer.run();
 }
