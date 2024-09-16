@@ -8,7 +8,7 @@ I created a blog post about this project and you can find that on **[Hashnode](h
 
 ## Add to Your Project
 
-You can add this to your Rust project with the terminal command:
+[vc_8bit](https://crates.io/crates/vc_8bit) can be added to your Rust project with the terminal command:
 
 ```
 cargo add vc_8bit
