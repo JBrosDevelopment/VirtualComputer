@@ -50,7 +50,6 @@ checksum = "7a66a03ae7c801facd77a29370b4faec201768915ac14a721ba36f20bc9c209b"
 name = "rust_program"
 version = "0.1.0"
 dependencies = [
- "regex",
  "vc_8bit",
 ]
 
