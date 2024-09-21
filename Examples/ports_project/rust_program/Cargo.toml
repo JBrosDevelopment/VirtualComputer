@@ -5,4 +5,4 @@ edition = "2021"
 
 [dependencies]
 regex = "1.10.6"
-vc_8bit = "0.1.4"
+vc_8bit = "0.1.5"
