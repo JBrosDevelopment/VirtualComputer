@@ -19,8 +19,9 @@ namespace UI_CSharp
         public RectangleShape[,] PixelMatrix = new RectangleShape[24,24];
         public RectangleShape Trackpad;
         public Text[] Ports;
+        public Text ErrorText;
         public (Vector2i current, Vector2i last) track;
-        public MainWindow() : base(new(805, 800), "rust ports project", Styles.Close, new(70, 80, 90)) { }
+        public MainWindow() : base(new(805, 820), "rust ports project", Styles.Close, new(70, 80, 90)) { }
 
         public override void Start()
         {
@@ -127,13 +128,21 @@ namespace UI_CSharp
                 FillColor = new(245, 245, 245),
                 CharacterSize = 24
             };
+            ErrorText = new()
+            {
+                Position = new(20, 790),
+                DisplayedString = "",
+                Font = new(DefaultFontPath),
+                FillColor = new(250, 35, 35),
+                CharacterSize = 18
+            };
 
             var keys = DrawKeys();
             var pixels = Pixels();
             Ports = [port0_text, port1_text, port2_text, port3_text, port4_text, port5_text, port6_text, port7_text];
             Trackpad = mouse_pad;
 
-            Elements.AddRange([screen, computer, mouse_pad, keyboard, mouse_pad_text, computer_text, .. Ports, .. keys, .. pixels]);
+            Elements.AddRange([screen, computer, mouse_pad, keyboard, mouse_pad_text, computer_text, ErrorText, .. Ports, .. keys, .. pixels]);
         }
         public bool IsMouseOverTrackpad()
         {
@@ -181,19 +190,12 @@ namespace UI_CSharp
 
         public void BeginRoutine()
         {
-            try
-            {
-                Start();
+            Start();
 
-                while (Window.IsOpen)
-                {
-                    DrawElements();
-                    Update();
-                }
-            }
-            catch (Exception e) 
+            while (Window.IsOpen)
             {
-                Console.WriteLine(e.Message);
+                DrawElements();
+                Update();
             }
         }
         
@@ -206,31 +208,51 @@ namespace UI_CSharp
                     Window.Close();
                 }
                 string[] ports = [
-                    File.ReadAllText(Path.Combine(ports_directory, "0")),
-                File.ReadAllText(Path.Combine(ports_directory, "1")),
-                File.ReadAllText(Path.Combine(ports_directory, "2")),
-                File.ReadAllText(Path.Combine(ports_directory, "3")),
-                File.ReadAllText(Path.Combine(ports_directory, "4")),
-                File.ReadAllText(Path.Combine(ports_directory, "5")),
-                File.ReadAllText(Path.Combine(ports_directory, "6")),
-                File.ReadAllText(Path.Combine(ports_directory, "7")),
+                    File.ReadAllText(Path.Combine(ports_directory, "0")), // bg clear screen
+                    File.ReadAllText(Path.Combine(ports_directory, "1")), // pixel X
+                    File.ReadAllText(Path.Combine(ports_directory, "2")), // pixel Y
+                    File.ReadAllText(Path.Combine(ports_directory, "3")), // red
+                    File.ReadAllText(Path.Combine(ports_directory, "4")), // green
+                    File.ReadAllText(Path.Combine(ports_directory, "5")), // blue
+                    File.ReadAllText(Path.Combine(ports_directory, "6")), // track pad
+                    File.ReadAllText(Path.Combine(ports_directory, "7")), // keyboard
                 ];
-                bool[] x_arr = (ports[0] + ports[1] + ports[2]).Select(x => x != '0').ToArray();
-                bool[] y_arr = (ports[3] + ports[4] + ports[5]).Select(y => y != '0').ToArray();
-                for (int x = 0; x < x_arr.Length; x++)
+                var pixel_x = Convert.ToInt32(ports[1], 2);
+                var pixel_y = Convert.ToInt32(ports[2], 2);
+
+                var red = Convert.ToInt32(ports[3], 2);
+                var green = Convert.ToInt32(ports[4], 2);
+                var blue = Convert.ToInt32(ports[5], 2);
+                var color = new Color((byte)red, (byte)green, (byte)blue);
+                
+                if (ports[0] == "00000000")
                 {
-                    for (int y = 0; y < y_arr.Length; y++)
+                    if (ports[0] == "00000001")
                     {
-                        if (x_arr[x] == y_arr[y] && x_arr[x] == true)
+                        foreach (var p in PixelMatrix)
                         {
-                            PixelMatrix[x, y].FillColor = Color.White;
-                        }
-                        else
-                        {
-                            PixelMatrix[x, y].FillColor = Color.Black;
+                            p.FillColor = Color.Black;
                         }
                     }
+                    else if (ports[0] == "11111111")
+                    {
+                        foreach (var p in PixelMatrix)
+                        {
+                            p.FillColor = Color.White;
+                        }
+                    } 
+                    else
+                    {
+                        foreach (var p in PixelMatrix)
+                        {
+                            p.FillColor = color;
+                        }
+                    }
+                    File.WriteAllText(Path.Combine(ports_directory, "0"), "00000000");
                 }
+
+                PixelMatrix[pixel_x, pixel_y].FillColor = color;
+
                 if (IsMouseDownTrackpad() && !track.last.Equals(new(0, 0)))
                 {
                     var difference = track.last - track.current;
@@ -249,28 +271,35 @@ namespace UI_CSharp
                     Ports[i].DisplayedString = $"PORT {i}: {(i != 6 ? ports[i] : File.ReadAllText(Path.Combine(ports_directory, "6")))}";
                 }
             }
-            catch
+            catch (Exception e)
             {
-
+                ErrorText.DisplayedString = e.Message;
             }
         }
         public void KeyboardClicked(string key)
         {
-            var k = key switch
+            try
             {
-                "SPACE" => ' ',
-                "ENTER" => '\r',
-                "TAB" => '\t',
-                "UP" => '^',
-                "DOWN" => '\'',
-                "LEFT" => '<',
-                "RIGHT" => '>',
-                _ => key.ToCharArray()[0]
-            };
-            var binary = Convert.ToString(k, 2);
-            var binary_fmt = new string('0', 8 - binary.Length) + binary;
+                var k = key switch
+                {
+                    "SPACE" => ' ',
+                    "ENTER" => '\r',
+                    "TAB" => '\t',
+                    "UP" => '^',
+                    "DOWN" => '\'',
+                    "LEFT" => '<',
+                    "RIGHT" => '>',
+                    _ => key.ToCharArray()[0]
+                };
+                var binary = Convert.ToString(k, 2);
+                var binary_fmt = new string('0', 8 - binary.Length) + binary;
 
-            File.WriteAllText(Path.Combine(ports_directory, "7"), binary_fmt);
+                File.WriteAllText(Path.Combine(ports_directory, "7"), binary_fmt);
+            }
+            catch (Exception e)
+            {
+                ErrorText.DisplayedString = e.Message;
+            }
         }
         public Drawable[] DrawKeys()
         {
