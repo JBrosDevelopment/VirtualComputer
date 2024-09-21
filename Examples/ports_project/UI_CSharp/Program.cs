@@ -199,12 +199,14 @@ namespace UI_CSharp
         
         public void Update()
         {
-            if (Keyboard.IsKeyPressed(Keyboard.Key.Escape))
+            try
             {
-                Window.Close();
-            }
-            string[] ports = [
-                File.ReadAllText(Path.Combine(ports_directory, "0")),
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Escape))
+                {
+                    Window.Close();
+                }
+                string[] ports = [
+                    File.ReadAllText(Path.Combine(ports_directory, "0")),
                 File.ReadAllText(Path.Combine(ports_directory, "1")),
                 File.ReadAllText(Path.Combine(ports_directory, "2")),
                 File.ReadAllText(Path.Combine(ports_directory, "3")),
@@ -213,38 +215,43 @@ namespace UI_CSharp
                 File.ReadAllText(Path.Combine(ports_directory, "6")),
                 File.ReadAllText(Path.Combine(ports_directory, "7")),
                 ];
-            bool[] x_arr = (ports[0] + ports[1] + ports[2]).Select(x => x != '0').ToArray();
-            bool[] y_arr = (ports[3] + ports[4] + ports[5]).Select(y => y != '0').ToArray();
-            for (int x = 0; x < x_arr.Length; x++)
-            {
-                for (int y = 0; y < y_arr.Length; y++)
+                bool[] x_arr = (ports[0] + ports[1] + ports[2]).Select(x => x != '0').ToArray();
+                bool[] y_arr = (ports[3] + ports[4] + ports[5]).Select(y => y != '0').ToArray();
+                for (int x = 0; x < x_arr.Length; x++)
                 {
-                    if (x_arr[x] == y_arr[y] && x_arr[x] == true)
+                    for (int y = 0; y < y_arr.Length; y++)
                     {
-                        PixelMatrix[x, y].FillColor = Color.White;
-                    }
-                    else
-                    {
-                        PixelMatrix[x, y].FillColor = Color.Black;
+                        if (x_arr[x] == y_arr[y] && x_arr[x] == true)
+                        {
+                            PixelMatrix[x, y].FillColor = Color.White;
+                        }
+                        else
+                        {
+                            PixelMatrix[x, y].FillColor = Color.Black;
+                        }
                     }
                 }
-            }
-            if (IsMouseDownTrackpad() && !track.last.Equals(new(0, 0)))
-            {
-                var difference = track.last - track.current;
-                var difference_clamped = new Vector2i(Math.Clamp(difference.X, -4, 4), Math.Clamp(difference.Y, -4, 4));
-                var binary_x = Convert.ToString(Math.Abs(difference_clamped.X) + 4, 2);
-                var binary_y = Convert.ToString(Math.Abs(difference_clamped.Y) + 4, 2);
+                if (IsMouseDownTrackpad() && !track.last.Equals(new(0, 0)))
+                {
+                    var difference = track.last - track.current;
+                    var difference_clamped = new Vector2i(Math.Clamp(difference.X, -4, 4), Math.Clamp(difference.Y, -4, 4));
+                    var binary_x = Convert.ToString(Math.Abs(difference_clamped.X) + 4, 2);
+                    var binary_y = Convert.ToString(Math.Abs(difference_clamped.Y) + 4, 2);
 
-                var binary_x_fmt = new string('0', 4 - binary_x.Length) + binary_x;
-                var binary_y_fmt = new string('0', 4 - binary_y.Length) + binary_y;
+                    var binary_x_fmt = new string('0', 4 - binary_x.Length) + binary_x;
+                    var binary_y_fmt = new string('0', 4 - binary_y.Length) + binary_y;
 
-                var binary = binary_x_fmt + binary_y_fmt;
-                File.WriteAllText(Path.Combine(ports_directory, "6"), binary);
+                    var binary = binary_x_fmt + binary_y_fmt;
+                    File.WriteAllText(Path.Combine(ports_directory, "6"), binary);
+                }
+                for (int i = 0; i < Ports.Length; i++)
+                {
+                    Ports[i].DisplayedString = $"PORT {i}: {(i != 6 ? ports[i] : File.ReadAllText(Path.Combine(ports_directory, "6")))}";
+                }
             }
-            for (int i = 0; i < Ports.Length; i++)
+            catch
             {
-                Ports[i].DisplayedString = $"PORT {i}: {(i != 6 ? ports[i] : File.ReadAllText(Path.Combine(ports_directory, "6")))}";
+
             }
         }
         public void KeyboardClicked(string key)

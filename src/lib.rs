@@ -393,24 +393,31 @@ pub mod vc_8bit {
             Ports::new(String::from("src/ports/"))
         }
         pub fn read(&self, address: Byte) -> Byte {
-            let file_contents = std::fs::read_to_string(format!("{}{}", self.bus_dir, address.to_i32())).unwrap();
-            let byte = Byte::new(
-                file_contents.chars()
-                    .map(|x| x.to_digit(10).unwrap() as u8)
-                    .map(|x| Bit::new(x == 1))
-                    .collect::<Vec<Bit>>()
-                    .try_into()
-                    .unwrap_or([Bit::new(false); 8])
-            );
-            byte
+            match std::fs::read_to_string(format!("{}{}", self.bus_dir, address.to_i32())) {
+                Ok(file_contents) => {
+                    let byte = Byte::new(
+                        file_contents.chars()
+                        .map(|x| x.to_digit(10).unwrap() as u8)
+                        .map(|x| Bit::new(x == 1))
+                        .collect::<Vec<Bit>>()
+                        .try_into()
+                        .unwrap_or([Bit::new(false); 8])
+                    );
+                    byte
+                }
+                Err(_) => Byte::zero()
+            }
         }
-        pub fn write(&self, address: Byte, value: Byte) {
-            std::fs::File::create(format!("{}{}", self.bus_dir, address.to_i32())).unwrap();
-            _ = std::fs::write(format!("{}{}", self.bus_dir, address.to_i32()), value.to_string());
-        }
+        pub fn write(&self, address: Byte, value: Byte) -> Result<(), std::io::Error> {
+            let file_path = format!("{}{}", self.bus_dir, address.to_i32());
+            match std::fs::File::create(&file_path) {
+                Ok(_) => std::fs::write(&file_path, value.to_string()),
+                Err(_) => Ok(()),
+            }
+        }        
         pub fn clear(&self) {
             for i in 0..PORTS_SIZE {
-                self.write(Byte::try_from(i as i32).unwrap(), Byte::zero());
+                _ = self.write(Byte::try_from(i as i32).unwrap(), Byte::zero());
             }
         }
     }
@@ -946,7 +953,7 @@ pub mod vc_8bit {
                     else { // 10 1X XX XX
                         // write
                         let register = self.cpu.get_register(register_address);
-                        self.ports.write(port_address.try_into().unwrap(), register.value);
+                        _ = self.ports.write(port_address.try_into().unwrap(), register.value);
                     }
                 } 
                 else { // 11 XX XX XX
