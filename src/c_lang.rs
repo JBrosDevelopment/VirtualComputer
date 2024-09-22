@@ -1281,7 +1281,6 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
             }
             else if func_name == "goto" {
                 let v = node.func_parameters.clone().unwrap()[0][0].clone().unwrap();
-                println!("{}", v.token.value);
                 let value: String = if v.token.token_type == TokenType::Number {
                     Byte::from_string(v.token.value.clone()).to_string()
                 } else {
