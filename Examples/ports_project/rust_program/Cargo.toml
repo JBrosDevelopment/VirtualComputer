@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-vc_8bit = "0.1.9"
+vc_8bit = "0.1.10"
