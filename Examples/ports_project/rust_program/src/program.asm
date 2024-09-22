@@ -39,7 +39,7 @@ jmp 43                      ; jump past if not equal                   | 38
 
 ; move pixel up
 mov r0 1                    ; \                                        | 40
-add r2 r0                   ;  load y, add 1 to y, store y             | 41
+sub r2 r0                   ;  load y, sub 1 from y, store y           | 41
 str r2 Y_VARIABLE           ; /                                        | 43
 
 ; check if input is down arrow
@@ -50,7 +50,7 @@ jmp 55                      ; jump past if not equal                   | 50
 
 ; move pixel down
 mov r0 1                    ; \                                        | 52
-sub r2 r0                   ;  load y, sub 1 from y, store y           | 53
+add r2 r0                   ;  load y, add 1 to y, store y             | 53
 str r2 Y_VARIABLE           ; /                                        | 55
 
 ; check if input is right arrow
