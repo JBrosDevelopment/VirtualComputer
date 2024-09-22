@@ -25,8 +25,8 @@ if (read == UP_ARROW) {
 };
 if (read == DOWN_ARROW) {
     y = y + SPEED,
-    r = 255,
-    g = 0,
+    r = 0,
+    g = 255,
     b = 255
 };
 if (read == LEFT_ARROW) {
@@ -37,9 +37,9 @@ if (read == LEFT_ARROW) {
 };
 if (read == RIGHT_ARROW) {
     x = x + SPEED,
-    r = 120,
-    g = 120,
-    b = 120
+    r = 255,
+    g = 255,
+    b = 0
 };
 
 if (x > 119) {
