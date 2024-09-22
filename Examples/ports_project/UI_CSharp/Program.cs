@@ -225,7 +225,11 @@ namespace UI_CSharp
                 var blue = Convert.ToInt32(ports[4], 2);
                 var color = new Color((byte)red, (byte)green, (byte)blue);
 
-                PixelMatrix[pixel_x, pixel_y].FillColor = color;
+                try
+                {
+                    PixelMatrix[pixel_x, pixel_y].FillColor = color;
+                }
+                catch { }
 
                 if (IsMouseDownTrackpad() && !track.last.Equals(new(0, 0)))
                 {

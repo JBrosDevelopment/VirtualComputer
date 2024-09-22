@@ -214,7 +214,7 @@ pub fn get_lexer_line(line: &str, line_number: i32, ) -> Line {
                 skip = 2;
             }
             else {
-                tokens.push(Token { token_type: TokenType::Plus, value: "+".to_string() });
+                tokens.push(Token { token_type: TokenType::Plus, value: "-".to_string() });
                 single = true;
             }
         }
