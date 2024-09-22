@@ -9,17 +9,17 @@ namespace UI_CSharp
     {
         public static void Main()
         {
-            MainWindow window = new MainWindow();
+            MainWindow window = new();
             window.BeginRoutine();
         }
     }
     public class MainWindow : ModifiedWindowRoutine
     {
         public const string ports_directory = "D:\\VirtualComputer\\VC\\Examples\\ports_project\\rust_program\\src\\ports\\";
-        public RectangleShape[,] PixelMatrix = new RectangleShape[24,24];
-        public RectangleShape Trackpad;
-        public Text[] Ports;
-        public Text ErrorText;
+        public RectangleShape[,] PixelMatrix = new RectangleShape[120,120];
+        public RectangleShape? Trackpad;
+        public Text[]? Ports;
+        public Text? ErrorText;
         public (Vector2i current, Vector2i last) track;
         public MainWindow() : base(new(805, 820), "rust ports project", Styles.Close, new(70, 80, 90)) { }
 
@@ -66,7 +66,7 @@ namespace UI_CSharp
 
             Text port0_text = new()
             {
-                Position = new(47, 440),
+                Position = new(47, 360),
                 DisplayedString = "PORT 0: 00000000",
                 Font = new(DefaultFontPath),
                 FillColor = new(245, 245, 245),
@@ -74,7 +74,7 @@ namespace UI_CSharp
             };
             Text port1_text = new()
             {
-                Position = new(47, 480),
+                Position = new(47, 400),
                 DisplayedString = "PORT 1: 00000000",
                 Font = new(DefaultFontPath),
                 FillColor = new(245, 245, 245),
@@ -82,7 +82,7 @@ namespace UI_CSharp
             };
             Text port2_text = new()
             {
-                Position = new(47, 520),
+                Position = new(47, 440),
                 DisplayedString = "PORT 2: 00000000",
                 Font = new(DefaultFontPath),
                 FillColor = new(245, 245, 245),
@@ -90,7 +90,7 @@ namespace UI_CSharp
             };
             Text port3_text = new()
             {
-                Position = new(47, 560),
+                Position = new(47, 480),
                 DisplayedString = "PORT 3: 00000000",
                 Font = new(DefaultFontPath),
                 FillColor = new(245, 245, 245),
@@ -98,7 +98,7 @@ namespace UI_CSharp
             };
             Text port4_text = new()
             {
-                Position = new(47, 600),
+                Position = new(47, 520),
                 DisplayedString = "PORT 4: 00000000",
                 Font = new(DefaultFontPath),
                 FillColor = new(245, 245, 245),
@@ -106,7 +106,7 @@ namespace UI_CSharp
             };
             Text port5_text = new()
             {
-                Position = new(47, 640),
+                Position = new(47, 560),
                 DisplayedString = "PORT 5: 00000000",
                 Font = new(DefaultFontPath),
                 FillColor = new(245, 245, 245),
@@ -114,7 +114,7 @@ namespace UI_CSharp
             };
             Text port6_text = new()
             {
-                Position = new(47, 680),
+                Position = new(47, 600),
                 DisplayedString = "PORT 6: 00000000",
                 Font = new(DefaultFontPath),
                 FillColor = new(245, 245, 245),
@@ -122,7 +122,7 @@ namespace UI_CSharp
             };
             Text port7_text = new()
             {
-                Position = new(47, 720),
+                Position = new(47, 640),
                 DisplayedString = "PORT 7: 00000000",
                 Font = new(DefaultFontPath),
                 FillColor = new(245, 245, 245),
@@ -134,7 +134,7 @@ namespace UI_CSharp
                 DisplayedString = "",
                 Font = new(DefaultFontPath),
                 FillColor = new(250, 35, 35),
-                CharacterSize = 18
+                CharacterSize = 14
             };
 
             var keys = DrawKeys();
@@ -147,7 +147,7 @@ namespace UI_CSharp
         public bool IsMouseOverTrackpad()
         {
             Vector2i position = Mouse.GetPosition(Window);
-            return Trackpad.GetGlobalBounds().Contains(position.X, position.Y);
+            return Trackpad!.GetGlobalBounds().Contains(position.X, position.Y);
         }
 
         public bool IsMouseDownTrackpad()
@@ -167,23 +167,23 @@ namespace UI_CSharp
         public Drawable[] Pixels()
         {
             Drawable[] pixels = [];
-            for (int x = 0; x < 24; x++)
+            for (int x = 0; x < 120; x++)
             {
-                for (int y = 0; y < 24; y++)
+                for (int y = 0; y < 120; y++)
                 {
                     var pixel = GetPixel(new(x, y));
-                    pixels = pixels.Append(pixel).ToArray();
+                    pixels = [.. pixels, pixel];
                     PixelMatrix[x, y] = pixel;
                 }
             }
             return pixels;
         }
-        public RectangleShape GetPixel((int, int) pos)
+        public static RectangleShape GetPixel((int, int) pos)
         {
             return new()
             {
-                Position = new(25 + (pos.Item1 * 10), 25 + (pos.Item2 * 10)),
-                Size = new(10, 10),
+                Position = new(25 + (pos.Item1 * 2), 25 + (pos.Item2 * 2)),
+                Size = new(2, 2),
                 FillColor = Color.Black
             };
         }
@@ -208,72 +208,54 @@ namespace UI_CSharp
                     Window.Close();
                 }
                 string[] ports = [
-                    File.ReadAllText(Path.Combine(ports_directory, "0")), // bg clear screen
-                    File.ReadAllText(Path.Combine(ports_directory, "1")), // pixel X
-                    File.ReadAllText(Path.Combine(ports_directory, "2")), // pixel Y
-                    File.ReadAllText(Path.Combine(ports_directory, "3")), // red
-                    File.ReadAllText(Path.Combine(ports_directory, "4")), // green
-                    File.ReadAllText(Path.Combine(ports_directory, "5")), // blue
-                    File.ReadAllText(Path.Combine(ports_directory, "6")), // track pad
+                    File.ReadAllText(Path.Combine(ports_directory, "0")), // pixel X 
+                    File.ReadAllText(Path.Combine(ports_directory, "1")), // pixel Y
+                    File.ReadAllText(Path.Combine(ports_directory, "2")), // red
+                    File.ReadAllText(Path.Combine(ports_directory, "3")), // green
+                    File.ReadAllText(Path.Combine(ports_directory, "4")), // blue
+                    File.ReadAllText(Path.Combine(ports_directory, "5")), // track pad x
+                    File.ReadAllText(Path.Combine(ports_directory, "6")), // track pad y
                     File.ReadAllText(Path.Combine(ports_directory, "7")), // keyboard
                 ];
-                var pixel_x = Convert.ToInt32(ports[1], 2);
-                var pixel_y = Convert.ToInt32(ports[2], 2);
+                var pixel_x = Convert.ToInt32(ports[0], 2);
+                var pixel_y = Convert.ToInt32(ports[1], 2);
 
-                var red = Convert.ToInt32(ports[3], 2);
-                var green = Convert.ToInt32(ports[4], 2);
-                var blue = Convert.ToInt32(ports[5], 2);
+                var red = Convert.ToInt32(ports[2], 2);
+                var green = Convert.ToInt32(ports[3], 2);
+                var blue = Convert.ToInt32(ports[4], 2);
                 var color = new Color((byte)red, (byte)green, (byte)blue);
-                
-                if (ports[0] == "00000000")
-                {
-                    if (ports[0] == "00000001")
-                    {
-                        foreach (var p in PixelMatrix)
-                        {
-                            p.FillColor = Color.Black;
-                        }
-                    }
-                    else if (ports[0] == "11111111")
-                    {
-                        foreach (var p in PixelMatrix)
-                        {
-                            p.FillColor = Color.White;
-                        }
-                    } 
-                    else
-                    {
-                        foreach (var p in PixelMatrix)
-                        {
-                            p.FillColor = color;
-                        }
-                    }
-                    File.WriteAllText(Path.Combine(ports_directory, "0"), "00000000");
-                }
 
                 PixelMatrix[pixel_x, pixel_y].FillColor = color;
 
                 if (IsMouseDownTrackpad() && !track.last.Equals(new(0, 0)))
                 {
                     var difference = track.last - track.current;
-                    var difference_clamped = new Vector2i(Math.Clamp(difference.X, -4, 4), Math.Clamp(difference.Y, -4, 4));
-                    var binary_x = Convert.ToString(Math.Abs(difference_clamped.X) + 4, 2);
-                    var binary_y = Convert.ToString(Math.Abs(difference_clamped.Y) + 4, 2);
+                    var difference_clamped = new Vector2i(Math.Clamp(difference.X, -255, 255), Math.Clamp(difference.Y, -255, 255));
+                    var binary_x = Convert.ToString(Math.Abs(difference_clamped.X), 2);
+                    var binary_y = Convert.ToString(Math.Abs(difference_clamped.Y), 2);
 
-                    var binary_x_fmt = new string('0', 4 - binary_x.Length) + binary_x;
-                    var binary_y_fmt = new string('0', 4 - binary_y.Length) + binary_y;
+                    var binary_x_fmt = new string('0', 8 - binary_x.Length) + binary_x;
+                    var binary_y_fmt = new string('0', 8 - binary_y.Length) + binary_y;
 
-                    var binary = binary_x_fmt + binary_y_fmt;
-                    File.WriteAllText(Path.Combine(ports_directory, "6"), binary);
+                    File.WriteAllText(Path.Combine(ports_directory, "5"), binary_x_fmt);
+                    File.WriteAllText(Path.Combine(ports_directory, "6"), binary_y_fmt);
                 }
-                for (int i = 0; i < Ports.Length; i++)
+                for (int i = 0; i < Ports!.Length; i++)
                 {
-                    Ports[i].DisplayedString = $"PORT {i}: {(i != 6 ? ports[i] : File.ReadAllText(Path.Combine(ports_directory, "6")))}";
+                    if (i == 5 || i == 6)
+                    {
+                        Ports[i].DisplayedString = $"PORT {i}: {Convert.ToInt32(ports[i], 2)}";
+                    }
+                    else
+                    {
+                        var binary = File.ReadAllText(Path.Combine(ports_directory, i.ToString()));
+                        Ports[i].DisplayedString = $"PORT {i}: {Convert.ToInt32(binary, 2)}";
+                    }
                 }
             }
             catch (Exception e)
             {
-                ErrorText.DisplayedString = e.Message;
+                ErrorText!.DisplayedString = e.Message;
             }
         }
         public void KeyboardClicked(string key)
@@ -298,7 +280,7 @@ namespace UI_CSharp
             }
             catch (Exception e)
             {
-                ErrorText.DisplayedString = e.Message;
+                ErrorText!.DisplayedString = e.Message;
             }
         }
         public Drawable[] DrawKeys()

@@ -1,6 +1,7 @@
 use vc_8bit::{assembly, c_lang, vc_8bit::Computer};
 fn main() { 
-    run_compiled_code_with_debugging();
+    run_assembly_from_file();
+    //run_compiled_code_with_debugging();
 }
 fn run_assembly(value: String) {
     let contents = assembly::compile_assembly_to_binary(&value);

@@ -219,36 +219,36 @@ pub fn compile_assembly_to_binary(contents: &str) -> String {
                     parts.next();
                     stream += get_register(parts.next().unwrap());
                     let address = get_binary(parts.next().unwrap(), &vars);
-                    let byte = Byte::new(
-                        address.chars()
-                            .map(|x| x.to_digit(10).unwrap() as u8)
-                            .map(|x| Bit::new(x == 1))
-                            .collect::<Vec<Bit>>()
-                            .try_into()
-                            .unwrap()
-                    );
-                    if byte.to_i32() < 0 || byte.to_i32() > 8 {
-                        panic!("Invalid port address {address}");
-                    }
-                    stream += address.chars().rev().take(3).collect::<String>().as_str();
+                    let bit3 = match address.as_str() {
+                        "00000000" => "000",
+                        "00000001" => "001",
+                        "00000010" => "010",
+                        "00000011" => "011",
+                        "00000100" => "100",
+                        "00000101" => "101",
+                        "00000110" => "110",
+                        "00000111" => "111",
+                        _ => panic!("Invalid port address {address}. Must be 0-7"),
+                    };
+                    stream += bit3;
                 }
                 "WPRT" => {
                     stream += "101";
                     parts.next();
                     stream += get_register(parts.next().unwrap());
                     let address = get_binary(parts.next().unwrap(), &vars);
-                    let byte = Byte::new(
-                        address.chars()
-                            .map(|x| x.to_digit(10).unwrap() as u8)
-                            .map(|x| Bit::new(x == 1))
-                            .collect::<Vec<Bit>>()
-                            .try_into()
-                            .unwrap()
-                    );
-                    if byte.to_i32() < 0 || byte.to_i32() > 8 {
-                        panic!("Invalid port address {address}");
-                    }
-                    stream += address.chars().rev().take(3).collect::<String>().as_str();
+                    let bit3 = match address.as_str() {
+                        "00000000" => "000",
+                        "00000001" => "001",
+                        "00000010" => "010",
+                        "00000011" => "011",
+                        "00000100" => "100",
+                        "00000101" => "101",
+                        "00000110" => "110",
+                        "00000111" => "111",
+                        _ => panic!("Invalid port address {address}. Must be 0-7"),
+                    };
+                    stream += bit3;
                 }
                 ";" => {
                     break;
