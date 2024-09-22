@@ -1,6 +1,8 @@
 use std::io::{self, Result};
 use std::vec::Vec;
-use crate::assembly::{string_to_bytes, compile_assembly_to_binary};
+use regex::Regex;
+
+use crate::assembly::{self, compile_assembly_to_binary, string_to_bytes};
 use crate::vc_8bit::{self, Byte};
 /// # Compile
 /// Compiles code to Assembly
@@ -17,14 +19,64 @@ use crate::vc_8bit::{self, Byte};
 /// # Panics
 /// This function will panic if the code is invalid
 pub fn compile(contents: &String) -> String {
-    let lex: Vec<Line> = get_lexer_lines(contents);
+    let fixed_program = constants_and_bytes(contents);
+    let lex: Vec<Line> = get_lexer_lines(&fixed_program);
     let par = parse(lex);
     interpret(par.clone())
 }
 
+pub fn constants_and_bytes(contents: &String) -> String {
+    // Regular expression to match binary literals
+    let re = Regex::new(r"0b[01]+").unwrap();
+
+    let updated_program = re.replace_all(&contents, |caps: &regex::Captures| {
+        // Extract the binary number without the "0b" prefix
+        let binary_str = &caps[0][2..]; 
+        // Convert the binary string to an integer
+        let integer_value = isize::from_str_radix(binary_str, 2).unwrap();
+        // Return the integer value as a string
+        integer_value.to_string()
+    }).into_owned();
+
+    let mut constants: Vec<(String, String, bool)> = vec![];
+    let mut lines: Vec<String> = vec![];
+    for line in updated_program.lines().map(|x| x.to_string()).collect::<Vec<String>>() {
+        let lexer_line = get_lexer_line(line.as_str(), 0);
+        let parts = lexer_line.clone().tokens.iter().map(|x| x.value.to_string()).collect::<Vec<String>>();
+        if parts.len() == 4 && parts[0] == "const" && parts[2] == "=" {
+            let name = parts[1].to_string();
+            let value = parts[3].to_string();
+            let is_quote = lexer_line.tokens.last().unwrap().token_type == TokenType::SingleQuote;
+            constants.push((name.to_string(), value.to_string(), is_quote));
+        } 
+        else {
+            if parts.iter().any(|x| constants.iter().any(|y| x == &y.0)) {
+                let mut new_parts: Vec<String> = vec![]; 
+                for i in 0..parts.len() {
+                    match constants.iter().find(|x| x.0 == parts[i]) {
+                        Some(c) => {
+                            if c.2 {
+                                new_parts.push(format!("'{}'", c.1.to_string()))
+                            } else {
+                                new_parts.push(c.1.to_string())
+                            }
+                        }
+                        None => new_parts.push(parts[i].to_string()),
+                    };
+                }
+                lines.push(new_parts.join(" "));
+            }
+            else {
+                lines.push(line.to_string());
+            }
+        }
+    };
+    lines.join("\n")
+}
+
 #[derive(Clone, Debug, PartialEq)] 
 pub enum TokenType {
-    Plus, Dash, Star, Slash, Equal, GreaterThan, LessThan, SingleQuote, Not, EqualCompare, And, Or, Identifier,
+    Plus, Dash, Star, Slash, Equal, GreaterThan, LessThan, SingleQuote, Not, EqualCompare, And, Or, Identifier, 
     OpenParen, CloseParen, OpenCurley, CloseCurley, Comma, NotEqual, AndAnd, OrOr, OpenBracket, CloseBracket, XOR,
     GreaterThanOrEqualTo, LessThanOrEqualTo, Number, TypeName, Statement, Boolean, ShiftLeft, ShiftRight, None, Increment, Decrement
 }
@@ -260,7 +312,7 @@ pub fn get_lexer_line(line: &str, line_number: i32, ) -> Line {
             }
             if !alphabetical.trim().is_empty() {
                 match alphabetical.trim() {
-                    "uint8" | "char" | "bool" => tokens.push(Token { token_type: TokenType::TypeName, value: alphabetical.trim().to_string() }),
+                    "uint8" | "char" | "bool" | "let" => tokens.push(Token { token_type: TokenType::TypeName, value: alphabetical.trim().to_string() }),
                     "uint8[]" | "char[]" | "bool[]" => tokens.push(Token { token_type: TokenType::TypeName, value: alphabetical.trim().to_string() }),
                     "if" | "while" => tokens.push(Token { token_type: TokenType::Statement, value: alphabetical.trim().to_string() }),
                     "true" | "false" => tokens.push(Token { token_type: TokenType::Boolean, value: alphabetical.trim().to_string() }),
@@ -534,7 +586,8 @@ pub fn parse(lexer_lines: Vec<Line>) -> Vec<Option<ExprNode>> {
                     last_was_variable = false;
                 }
                 TokenType::TypeName => {
-                    let operator = Token { value: format!("{}", chars.next().unwrap().value.to_string()), token_type: TokenType::TypeName };
+                    let t_type = c.token_type.clone() ;
+                    let operator = Token { value: format!("{}", chars.next().unwrap().value.to_string()), token_type: t_type};
                     let e1 = ExprNode::new_num(chars.next().unwrap().clone(), number);
                     let e2 = ExprNode::new_num(Token { token_type: TokenType::None, value: String::new() }, number);
                     expr_stack.push(ExprNode::new_op(operator, e1, e2, number));
@@ -1008,6 +1061,7 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
                     "bool" | "bool[]" => VariableType::Bool,
                     "char" | "char[]" => VariableType::Char,
                     "uint8" | "uint8[]" => VariableType::UInt8,
+                    "let" => VariableType::None,
                     _ => panic!("Invalid variable type")
                 };
 
@@ -1224,6 +1278,12 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
                 let value = solve_node(&v.clone(), variables, "R2", virtual_registers, VariableType::None, bytes);
 
                 format!("{}\nOUT R2 ; print value as byte", value)
+            }
+            else if func_name == "goto" {
+                let v = node.func_parameters.clone().unwrap()[0][0].clone().unwrap();
+                let value = solve_node(&v.clone(), variables, "R2", virtual_registers, VariableType::None, bytes);
+
+                format!("{}\nJMP R2 ; go to line", value)
             }
             else if func_name == "to_char" {                
                 let v = node.func_parameters.clone().unwrap()[0][0].clone().unwrap();

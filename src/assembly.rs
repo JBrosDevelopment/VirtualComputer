@@ -302,11 +302,12 @@ fn get_register(content: &str) -> &str {
 /// ```
 /// # Panics
 /// Will panic if value is not a number, hexadecimal, binary sequence, or variable
-fn get_binary(_content: &str, vars: &Vec<(String, Byte)>) -> String {
+pub fn get_binary(_content: &str, vars: &Vec<(String, Byte)>) -> String {
     let content = _content.chars().take_while(|x| x != &';').collect::<String>();
     let binary_regex = Regex::new(r"^#[01]{8}$").unwrap(); // Matches #00000000 (binary)
     let hex_regex = Regex::new(r"^0x[0-9A-Fa-f]+$").unwrap(); // Matches 0x00 (hexadecimal)
     let decimal_regex = Regex::new(r"\d+").unwrap(); // Matches any number (decimal)
+    let quote_regex = Regex::new(r"\'.\'").unwrap(); // Matches any quote (char)
 
     if binary_regex.is_match(content.as_str()) {
         // It's a binary string
@@ -314,6 +315,10 @@ fn get_binary(_content: &str, vars: &Vec<(String, Byte)>) -> String {
     } else if hex_regex.is_match(content.as_str()) {
         // It's a hexadecimal string
         hex_to_binary(content.replace("0x", "")).unwrap()
+    } else if quote_regex.is_match(content.as_str()) {
+        // It's a quote string
+        let c = content.chars().nth(1).unwrap();
+        (c as u8).to_string()
     } else if decimal_regex.is_match(content.as_str()) {
         // It's a decimal string
         decimal_to_binary(content.parse().unwrap())

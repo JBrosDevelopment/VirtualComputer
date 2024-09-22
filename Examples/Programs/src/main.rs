@@ -1,7 +1,6 @@
 use vc_8bit::{assembly, c_lang, vc_8bit::Computer};
 fn main() { 
-    run_assembly_from_file();
-    //run_compiled_code_with_debugging();
+    run_compiled_code_with_debugging();
 }
 fn run_assembly(value: String) {
     let contents = assembly::compile_assembly_to_binary(&value);
@@ -38,7 +37,8 @@ fn run_compiled_code_with_debugging() {
     // array[CONSTANT]
     // value << CONSTANT
     let contents = std::fs::read_to_string("src/test/test.c").unwrap();
-    let lex = c_lang::get_lexer_lines(&contents);
+    let fixed = c_lang::constants_and_bytes(&contents);
+    let lex = c_lang::get_lexer_lines(&fixed);
     let par = c_lang::parse(lex);
     for l in par.clone() { println!("{}", c_lang::fmt_expr(&l.unwrap())) }
     

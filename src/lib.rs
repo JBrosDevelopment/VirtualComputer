@@ -79,7 +79,14 @@ pub mod vc_8bit {
                     }
                     Ok(Byte { value: bits })
                 }
-                _ => Err("Invalid value for Byte. Must be between 0 and 255."),
+                _ => {
+                    if value < 0 {
+                        Ok(Byte::zero())
+                    }
+                    else {
+                        Ok(Byte::full())
+                    }
+                }
             }
         }
     }
