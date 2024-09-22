@@ -1281,9 +1281,14 @@ pub fn solve_node(node: &ExprNode, variables: &mut Vec<Variable>, register: &str
             }
             else if func_name == "goto" {
                 let v = node.func_parameters.clone().unwrap()[0][0].clone().unwrap();
-                let value = solve_node(&v.clone(), variables, "R2", virtual_registers, VariableType::None, bytes);
+                println!("{}", v.token.value);
+                let value: String = if v.token.token_type == TokenType::Number {
+                    Byte::from_string(v.token.value.clone()).to_string()
+                } else {
+                    panic!("jumping requires constant value in line {}", node.line);
+                };
 
-                format!("{}\nJMP R2 ; go to line", value)
+                format!("JMP #{value}")
             }
             else if func_name == "to_char" {                
                 let v = node.func_parameters.clone().unwrap()[0][0].clone().unwrap();

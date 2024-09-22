@@ -1,10 +1,11 @@
-use vc_8bit::{assembly, vc_8bit::Computer};
+use vc_8bit::{assembly, c_lang, vc_8bit::Computer};
 
 fn main() {
-    let program = std::fs::read_to_string("src/program.asm").unwrap();
+    let program = std::fs::read_to_string("src/program.c").unwrap();
+    let compiled_program = c_lang::compile(&program);
     
     // assemble code
-    let contents = assembly::compile_assembly_to_binary(&program);
+    let contents = assembly::compile_assembly_to_binary(&compiled_program);
     let bytes = assembly::string_to_bytes(contents.as_str());
     
     // run on VC
