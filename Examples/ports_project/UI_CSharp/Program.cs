@@ -217,6 +217,8 @@ namespace UI_CSharp
                     File.ReadAllText(Path.Combine(ports_directory, "6")), // track pad y
                     File.ReadAllText(Path.Combine(ports_directory, "7")), // keyboard
                 ];
+                ports = ports.Select(x => x == "" ? "00000000" : x).ToArray();
+
                 var pixel_x = Convert.ToInt32(ports[0], 2);
                 var pixel_y = Convert.ToInt32(ports[1], 2);
 
@@ -234,7 +236,7 @@ namespace UI_CSharp
                 if (IsMouseDownTrackpad() && !track.last.Equals(new(0, 0)))
                 {
                     var difference = track.last - track.current;
-                    var difference_clamped = new Vector2i(Math.Clamp(difference.X, -255, 255), Math.Clamp(difference.Y, -255, 255));
+                    var difference_clamped = new Vector2i(Math.Clamp(difference.X + 125, -250, 250), Math.Clamp(difference.Y + 125, -250, 520));
                     var binary_x = Convert.ToString(Math.Abs(difference_clamped.X), 2);
                     var binary_y = Convert.ToString(Math.Abs(difference_clamped.Y), 2);
 
@@ -253,7 +255,7 @@ namespace UI_CSharp
                     else
                     {
                         var binary = File.ReadAllText(Path.Combine(ports_directory, i.ToString()));
-                        Ports[i].DisplayedString = $"PORT {i}: {Convert.ToInt32(binary, 2)}";
+                        Ports[i].DisplayedString = $"PORT {i}: {Convert.ToInt32(binary == "" ? "00000000" : binary, 2)}";
                     }
                 }
             }
